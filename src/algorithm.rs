@@ -162,15 +162,16 @@ impl Constraints {
         let valid_scores = population
             .iter()
             .filter(|tt| self.professors().iter().all(|prof| !tt.has_professor_overlap(prof)))
-            .map(|tt| self.evaluate(tt));
+            .map(|tt| self.evaluate(tt))
+            .collect::<Vec<_>>();
 
-        if valid_scores.clone().count() == 0 {
+        if valid_scores.is_empty() {
             return "No valid timetables".to_string();
         }
 
-        let mean = (1.0 / valid_scores.clone().count() as f64) * (valid_scores.clone().sum::<usize>() as f64);
+        let mean = (1.0 / valid_scores.len() as f64) * (valid_scores.iter().sum::<usize>() as f64);
 
-        let best = valid_scores
+        let best = valid_scores.iter()
             .min()
             .unwrap();
 
