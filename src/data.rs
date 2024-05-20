@@ -1,18 +1,36 @@
 use crate::definitions::*;
+use std::collections::HashSet;
 
-pub fn students() -> Vec<Student> {
+pub fn students() -> Vec<HashSet<usize>> {
     vec![
-        Student::new(0, vec![Course::new(0), Course::new(1)]),
-        Student::new(1, vec![Course::new(1), Course::new(2)]),
-        Student::new(2, vec![Course::new(1), Course::new(2)]),
-        Student::new(3, vec![Course::new(1), Course::new(3)]),
+        HashSet::from_iter(vec![0, 1].into_iter()),
+        HashSet::from_iter(vec![1, 2].into_iter()),
+        HashSet::from_iter(vec![1, 2].into_iter()),
+        HashSet::from_iter(vec![1, 3].into_iter()),
     ]
 }
 
-pub fn professors() -> Vec<Professor> {
+pub fn gen_people(
+    n: usize,
+    n_courses: usize,
+    n_courses_per_person: usize,
+) -> Vec<HashSet<usize>> {
+    let mut rng = rand::thread_rng();
+
+    (0..n)
+        .map(|_| {
+            HashSet::from_iter(
+                rand::seq::index::sample(&mut rng, n_courses, n_courses_per_person)
+                    .into_iter()
+            )
+        })
+        .collect()
+}
+
+pub fn professors() -> Vec<HashSet<usize>> {
     vec![
-        Professor::new(0, vec![Course::new(0)]),
-        Professor::new(1, vec![Course::new(1)]),
-        Professor::new(2, vec![Course::new(2), Course::new(3)]),
+        HashSet::from_iter(vec![0].into_iter()),
+        HashSet::from_iter(vec![1].into_iter()),
+        HashSet::from_iter(vec![2, 3].into_iter()),
     ]
 }

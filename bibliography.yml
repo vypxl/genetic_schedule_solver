@@ -1,0 +1,11 @@
+aome:
+  type: Web
+  title: A solution to the university course timetabling problem using a hybrid method based on genetic algorithms
+  author: ["Javier Arias-Osori", "Andrés Mora-Esquivel"]
+  url: https://www.redalyc.org/journal/496/49668129006/html/
+
+abuay:
+  type: Web
+  title: Adaptive randomized descent algorithm for solving course timetabling problems
+  author: ["Anmar Abuhamdah", "Masri Ayob"]
+  url: https://academicjournals.org/journal/IJPS/article-full-text-pdf/0F9AE6934683

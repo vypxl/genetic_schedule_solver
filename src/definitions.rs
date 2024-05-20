@@ -1,149 +1,60 @@
 use rand::Rng;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Course {
-    pub id: usize,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Room {
-    pub id: usize,
-    pub capacity: usize,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Professor {
-    pub id: usize,
-    pub courses: Vec<Course>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Student {
-    pub id: usize,
-    pub courses: Vec<Course>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Time {
-    which: usize,
-}
-
-pub type TimeSlot = Vec<Option<Course>>;
+use std::collections::HashSet;
+use std::ops::Range;
 
 #[derive(Clone, PartialEq, Eq)]
 pub struct TimeTable {
-    pub n_rooms: usize,
     pub n_timeslots: usize,
-    pub inner: Vec<TimeSlot>,
+    pub n_rooms: usize,
+    pub inner: Vec<Vec<usize>>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Constraints {
-    pub n_rooms: usize,
     pub n_timeslots: usize,
-    pub room_capacities: Vec<usize>,
-    professors: Vec<Professor>,
-    students: Vec<Student>,
-    courses: Vec<Course>,
-}
-
-impl Course {
-    pub fn new(id: usize) -> Self {
-        Self { id }
-    }
-}
-
-impl Room {
-    pub fn new(id: usize, capacity: usize) -> Self {
-        Self { id, capacity }
-    }
-}
-
-impl Professor {
-    pub fn empty(id: usize) -> Self {
-        Self {
-            id,
-            courses: Vec::new(),
-        }
-    }
-
-    pub fn new(id: usize, courses: Vec<Course>) -> Self {
-        Self { id, courses }
-    }
-}
-
-impl Student {
-    pub fn empty(id: usize) -> Self {
-        Self {
-            id,
-            courses: Vec::new(),
-        }
-    }
-
-    pub fn new(id: usize, courses: Vec<Course>) -> Self {
-        Self { id, courses }
-    }
-}
-
-impl Time {
-    pub fn new(which: usize) -> Self {
-        Self { which }
-    }
-}
-
-pub trait HasCourses {
-    fn courses(&self) -> &Vec<Course>;
-}
-
-impl HasCourses for &Professor {
-    fn courses(&self) -> &Vec<Course> {
-        &self.courses
-    }
-}
-
-impl HasCourses for &Student {
-    fn courses(&self) -> &Vec<Course> {
-        &self.courses
-    }
+    pub n_rooms: usize,
+    professors: Vec<HashSet<usize>>,
+    students: Vec<HashSet<usize>>,
+    courses: Range<usize>,
 }
 
 impl TimeTable {
     pub fn new(constraints: &Constraints) -> Self {
-        let inner = vec![vec![None; constraints.n_rooms]; constraints.n_timeslots];
+        let inner = vec![vec![0; constraints.n_timeslots]; constraints.n_rooms];
         Self {
-            n_rooms: constraints.n_rooms,
             n_timeslots: constraints.n_timeslots,
+            n_rooms: constraints.n_rooms,
             inner,
         }
     }
 
     pub fn make_empty_copy(&self) -> Self {
         Self {
-            n_rooms: self.n_rooms,
             n_timeslots: self.n_timeslots,
-            inner: vec![vec![None; self.n_rooms]; self.n_timeslots],
+            n_rooms: self.n_rooms,
+            inner: vec![vec![0; self.n_timeslots]; self.n_rooms],
         }
     }
 
-    pub fn set(&mut self, time: usize, room: usize, course: Course) {
-        self.inner[time][room] = Some(course);
+    pub fn set(&mut self, time: usize, room: usize, course: usize) {
+        self.inner[time][room] = course;
     }
 
     pub fn unset(&mut self, time: usize, room: usize) {
-        self.inner[time][room] = None;
+        self.inner[time][room] = 0;
     }
 
-    pub fn get(&self, time: usize, room: usize) -> Option<Course> {
+    pub fn get(&self, time: usize, room: usize) -> usize {
         self.inner[time][room]
     }
 
-    pub fn find(&self, course: Course) -> Option<(usize, usize)> {
+    pub fn find(&self, course: usize) -> Option<(usize, usize)> {
+        assert!(course != 0);
+        todo!("optimize this");
         for (time, timeslot) in self.inner.iter().enumerate() {
             for (room, c) in timeslot.iter().enumerate() {
-                if let Some(c) = c {
-                    if *c == course {
-                        return Some((time, room));
-                    }
+                if *c == course {
+                    return Some((time, room));
                 }
             }
         }
@@ -151,19 +62,13 @@ impl TimeTable {
     }
 
     // get a new timetable that only contains the courses the given entity has
-    pub fn filter(&self, entity: impl HasCourses) -> Self {
-        let mut result = Self {
-            n_rooms: self.n_rooms,
-            n_timeslots: self.n_timeslots,
-            inner: vec![vec![None; self.n_rooms]; self.n_timeslots],
-        };
+    pub fn filter(&self, entity: HashSet<usize>) -> Self {
+        let mut result = self.make_empty_copy();
 
         for (time, timeslot) in self.inner.iter().enumerate() {
             for (room, c) in timeslot.iter().enumerate() {
-                if let Some(c) = c {
-                    if entity.courses().contains(c) {
-                        result.set(time, room, *c);
-                    }
+                if *c != 0 && entity.contains(c) {
+                    result.set(time, room, *c);
                 }
             }
         }
@@ -172,15 +77,15 @@ impl TimeTable {
     }
 
     // list all courses that are in the timetable
-    pub fn courses(&self) -> Vec<Course> {
+    pub fn courses(&self) -> HashSet<usize> {
         self.inner
             .iter()
-            .flat_map(|timeslot| timeslot.iter().filter_map(|c| *c))
+            .flat_map(|timeslot| timeslot.iter().filter_map(|c| if *c != 0 { Some(*c) } else { None }))
             .collect()
     }
 
     // randomly place a course in the timetable into a free slot
-    pub fn random_place(&mut self, course: Course) {
+    pub fn random_place(&mut self, course: usize) {
         let free_slots = self
             .inner
             .iter()
@@ -189,7 +94,7 @@ impl TimeTable {
                 timeslot
                     .iter()
                     .enumerate()
-                    .filter(|(_, c)| c.is_none())
+                    .filter(|(_, c)| **c == 0)
                     .map(move |(room, _)| (time, room))
             })
             .collect::<Vec<_>>();
@@ -206,8 +111,8 @@ impl std::fmt::Debug for TimeTable {
             write!(f, "| ")?;
             for room in time.iter() {
                 match room {
-                    Some(course) => write!(f, "{: >4}, ", course.id)?,
-                    None => write!(f, "{: >4}, ", "-")?,
+                    0 => write!(f, "{: >4}, ", "-")?,
+                    course => write!(f, "{: >4}, ", course)?,
                 }
             }
             writeln!(f)?;
@@ -219,36 +124,38 @@ impl std::fmt::Debug for TimeTable {
 
 impl Constraints {
     pub fn new(
-        room_capacities: Vec<usize>,
         n_timeslots: usize,
-        professors: Vec<Professor>,
-        students: Vec<Student>,
+        n_rooms: usize,
+        n_courses: usize,
+        professors: Vec<HashSet<usize>>,
+        students: Vec<HashSet<usize>>,
     ) -> Self {
-        let courses = professors
-            .iter()
-            .flat_map(|prof| prof.courses.iter())
-            .chain(students.iter().flat_map(|student| student.courses.iter()))
-            .cloned()
-            .collect();
+        let courses = 1..n_courses+1;
+
+        for c in courses {
+            todo!("Check if all courses have a prof")
+        }
+
+        todo!("Check if there is a valid timetable (enough space and no prof overlap possible)");
+
         Self {
-            n_rooms: room_capacities.len(),
             n_timeslots,
-            room_capacities,
+            n_rooms,
             professors,
             students,
             courses,
         }
     }
 
-    pub fn professors(&self) -> &Vec<Professor> {
+    pub fn professors(&self) -> &Vec<HashSet<usize>> {
         &self.professors
     }
 
-    pub fn students(&self) -> &Vec<Student> {
+    pub fn students(&self) -> &Vec<HashSet<usize>> {
         &self.students
     }
 
-    pub fn courses(&self) -> &Vec<Course> {
+    pub fn courses(&self) -> &Range<usize> {
         &self.courses
     }
 }
