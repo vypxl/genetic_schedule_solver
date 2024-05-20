@@ -134,7 +134,6 @@ impl Constraints {
 
     pub fn select(&self, mut population: Vec<TimeTable>, n: usize) -> Vec<TimeTable> {
         population.sort_by_cached_key(|tt| self.evaluate(tt));
-        population.reverse();
         population.truncate(n);
 
         population
