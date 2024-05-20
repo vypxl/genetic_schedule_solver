@@ -153,13 +153,11 @@
 
   We define it as follows:
   1. Begin with a timetable filled with zeros for no class.
-  2. For each timeslot $t$ and room $r$, we choose $Q^*(t, r) = Q_l(t, r)$ with probability $0.5$, otherwise $Q_r(t, r)$
+  2. For each timeslot $t$ and room $r$, we choose $Q^*(t, r) = Q_l(t, r)$ with probability $0.5$, otherwise $Q_r(t, r)$. If this would create a duplicate assignment (class taught in two slots), we skip it.
 
   Now we repair possible constraint violations:
 
-  3. For each class that is held multiple times, we remove all but one occurence randomly
-  4. For each class, if it is not held, we add it to a random free timeslot and room
-  5. For each professor, if they teach two or more classes at the same time, we move the conflicting ones to timeslots where the professor is free
+  3. For each class, if it is not held, we add it to a random free timeslot and room
 ]
 
 #slide[
@@ -173,7 +171,31 @@
 
   1. Mutate with probability $rho$
   2. Remove this class from the slot
-  3. Place it into a random other free slot, given it doesn't violate any constraints
+  3. Place it into a random other free slot
+]
+
+#slide[
+  = Genetic Algorithm - Selection & Iteration
+
+  We select the best timetables from the population using the evaluation function $f$.
+  We sort the population by $f$ and take the best $k$ timetables.
+
+  Then we create a new population by making $k/2$ pairs and crossing them, then mutating the 'children' with probability $rho$.
+
+  We repeat this for the desired number of generations to obtain our final population.
+  The result will then be the timetable from this population with the lowest evaluation score.
+]
+
+#slide[
+  = Genetic Algorithm - What about the Professor Constraint?
+
+  We did not fix the possible violation of the constraint that no professor teaches two classes at the same time.
+
+  We could handle this similarly to the other constraints, but I found that in this case, a different approach leads to better convergence behavior:
+
+  Instead of trying to fix non-compliant timetables, we just add a strong penalty to the evaluation function.
+
+  This way, the population will gradually evolve to not violate this constraint, as it will always be a large disadvantage.
 ]
 
 #slide[
@@ -183,6 +205,13 @@
   For a more detailed description of the input format and how to use the program, consult the `README.md` file.
 
 
+]
+
+#slide[
+  = Findings TODO
+
+  - turns out v1 of `cross` is bad - maybe take first half / second half and fix?
+  - profs as strong negative score better than hard cutoff
 ]
 
 #slide(bibliography("bibliography.yml", title: "Sources"))

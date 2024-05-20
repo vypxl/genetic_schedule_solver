@@ -84,7 +84,7 @@ impl TimeTable {
     }
 
     pub fn cross(&self, other: &TimeTable) -> TimeTable {
-        let mut tt = self.clone();
+        let mut tt = self.make_empty_copy();
 
         // mix the two timetables
         for time in 0..self.n_timeslots {
@@ -116,7 +116,9 @@ impl Constraints {
         }
 
         for prof in self.professors().iter() {
-            score += tt.evaluate(Some(prof)) * 1000000 // Professor inconveniences are worth more
+            if tt.has_professor_overlap(prof) {
+                score += 1000000; // large penalty
+            }
         }
 
         score
