@@ -24,7 +24,11 @@ impl TimeTable {
     }
 
     pub fn evaluate(&self, filter: Option<&HashSet<usize>>) -> usize {
-        enum PauseState { Initial, HasBefore, HasPause }
+        enum PauseState {
+            Initial,
+            HasBefore,
+            HasPause,
+        }
 
         let mut score = 0;
         let mut pause_state = PauseState::Initial;
@@ -33,7 +37,12 @@ impl TimeTable {
             let mut n_courses = 0;
             for room in 0..self.n_rooms {
                 let c = self.get(time, room);
-                if c != 0 && match filter { Some(f) => f.contains(&c), _ => true } {
+                if c != 0
+                    && match filter {
+                        Some(f) => f.contains(&c),
+                        _ => true,
+                    }
+                {
                     n_courses += 1;
                 }
             }
@@ -46,7 +55,7 @@ impl TimeTable {
                     PauseState::HasPause => {
                         score += SCORE_PAUSE_TIMESLOT;
                         PauseState::HasBefore
-                    },
+                    }
                 };
             } else {
                 pause_state = match pause_state {
@@ -89,7 +98,12 @@ impl TimeTable {
         // mix the two timetables
         for time in 0..self.n_timeslots {
             for room in 0..self.n_rooms {
-                let which = (if thread_rng().gen_bool(0.5) { other } else { self }).get(time, room);
+                let which = (if thread_rng().gen_bool(0.5) {
+                    other
+                } else {
+                    self
+                })
+                .get(time, room);
                 let _ = tt.set(time, room, which); // we ignore the possible error and fix missing courses later
             }
         }
@@ -158,23 +172,40 @@ impl Constraints {
             .collect::<Vec<_>>()
     }
 
-    pub fn evaluate_generation(&self, population: &[TimeTable]) -> String {
-        let valid_scores = population
+    pub fn evaluate_generation(
+        &self,
+        population: &[TimeTable],
+    ) -> (String, usize, Option<TimeTable>) {
+        let valid_tts = population
             .iter()
-            .filter(|tt| self.professors().iter().all(|prof| !tt.has_professor_overlap(prof)))
+            .filter(|tt| {
+                self.professors()
+                    .iter()
+                    .all(|prof| !tt.has_professor_overlap(prof))
+            })
+            .collect::<Vec<_>>();
+        let valid_scores = valid_tts
+            .iter()
             .map(|tt| self.evaluate(tt))
             .collect::<Vec<_>>();
 
         if valid_scores.is_empty() {
-            return "No valid timetables".to_string();
+            return ("No valid timetables".to_string(), 0, None);
         }
 
         let mean = (1.0 / valid_scores.len() as f64) * (valid_scores.iter().sum::<usize>() as f64);
 
-        let best = valid_scores.iter()
-            .min()
+        let (best_idx, best_score) = valid_scores
+            .iter()
+            .enumerate()
+            .min_by_key(|&(_, x)| x)
             .unwrap();
+        let best = valid_tts[best_idx].clone();
 
-        format!("Mean: {:.2}, Best: {:.2}", mean, best)
+        (
+            format!("Mean: {:.2}, Best: {:.2}", mean, best_score),
+            *best_score,
+            Some(best),
+        )
     }
 }

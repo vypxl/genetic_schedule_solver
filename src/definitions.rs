@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 
 #[derive(Clone, PartialEq, Eq)]
@@ -22,8 +22,7 @@ pub struct Constraints {
 
 impl TimeTable {
     fn compute_free_slots(&self) -> Vec<(usize, usize)> {
-        self
-            .inner
+        self.inner
             .iter()
             .enumerate()
             .flat_map(|(time, timeslot)| {
@@ -132,8 +131,8 @@ impl TimeTable {
 impl std::fmt::Debug for TimeTable {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "+ ---")?;
-        for time in self.inner.iter() {
-            write!(f, "| ")?;
+        for (i, time) in self.inner.iter().enumerate() {
+            write!(f, "| time {: >3} |", i + 1)?;
             for room in time.iter() {
                 match room {
                     0 => write!(f, "{: >4}, ", "-")?,
@@ -155,13 +154,15 @@ impl Constraints {
         professors: Vec<HashSet<usize>>,
         students: Vec<HashSet<usize>>,
     ) -> Self {
-        let courses = 1..n_courses+1;
+        let courses = 1..n_courses + 1;
 
         assert!(n_timeslots * n_rooms >= n_courses); // there must be enough space for all courses
         assert!(professors.len() * n_timeslots >= n_courses); // each prof can teach one course per timeslot
 
         for c in courses.clone() {
-            if professors.iter().any(|p| p.contains(&c)) { continue; };
+            if professors.iter().any(|p| p.contains(&c)) {
+                continue;
+            };
 
             panic!("Course {} has no professor", c);
         }
