@@ -126,6 +126,25 @@ impl TimeTable {
         let (time, room) = free_slots[rand::thread_rng().gen_range(0..free_slots.len())];
         self.set(time, room, course)
     }
+
+    // shift the courses in all rooms to the left (reduce fragmentation)
+    pub fn defrag(&mut self) {
+        for time in self.inner.iter_mut() {
+            time.sort_by(|a, b| {
+                // Sort zeros to the end
+                if *a == 0 {
+                    std::cmp::Ordering::Greater
+                } else if *b == 0 {
+                    std::cmp::Ordering::Less
+                } else {
+                    a.cmp(b)
+                }
+            });
+        }
+
+        self.lookup = self.compute_lookup();
+        self.free_slots_cache = None;
+    }
 }
 
 impl std::fmt::Debug for TimeTable {

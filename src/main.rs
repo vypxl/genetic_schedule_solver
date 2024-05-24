@@ -59,7 +59,8 @@ fn main() {
         population = new_generation;
     }
 
-    if let Some(best) = overall_best {
+    if let Some(mut best) = overall_best {
+        best.defrag();
         println!(
             "Best timetable found (Penalty: {}):\n{:?}",
             overall_best_score, best
