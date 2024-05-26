@@ -1,4 +1,5 @@
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 use std::ops::Range;
 
@@ -11,7 +12,7 @@ pub struct TimeTable {
     free_slots_cache: Option<Vec<(usize, usize)>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Constraints {
     pub n_timeslots: usize,
     pub n_rooms: usize,
