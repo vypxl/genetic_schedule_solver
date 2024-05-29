@@ -1,12 +1,14 @@
 use crate::definitions::*;
 use rand::{thread_rng, Rng};
+use rayon::prelude::*;
 use std::collections::HashSet;
 
 const SCORE_PAUSE_TIMESLOT: usize = 1;
 const SCORE_DOUBLE_BOOKED_TIMESLOT: usize = 3;
 
 impl TimeTable {
-    pub fn has_professor_overlap(&self, prof: &HashSet<usize>) -> bool {
+    pub fn professor_overlap(&self, prof: &HashSet<usize>) -> usize {
+        let mut score = 0;
         for time in 0..self.n_timeslots {
             let mut n_courses = 0;
             for room in 0..self.n_rooms {
@@ -17,10 +19,11 @@ impl TimeTable {
             }
 
             if n_courses > 1 {
-                return true;
+                score += n_courses - 1;
             }
         }
-        false
+
+        score * 100000
     }
 
     pub fn evaluate(&self, filter: Option<&HashSet<usize>>) -> usize {
@@ -127,17 +130,19 @@ impl TimeTable {
 
 impl Constraints {
     pub fn evaluate(&self, tt: &TimeTable) -> usize {
-        let mut score = 0;
+        let mut score: usize = 0;
 
-        for student in self.students().iter() {
-            score += tt.evaluate(Some(student))
-        }
+        score += self
+            .students()
+            .par_iter()
+            .map(|student| tt.evaluate(Some(student)))
+            .sum::<usize>();
 
-        for prof in self.professors().iter() {
-            if tt.has_professor_overlap(prof) {
-                score += 1000000; // large penalty
-            }
-        }
+        score += self
+            .professors()
+            .par_iter()
+            .map(|prof| tt.professor_overlap(prof))
+            .sum::<usize>();
 
         score
     }
@@ -185,7 +190,7 @@ impl Constraints {
             .filter(|tt| {
                 self.professors()
                     .iter()
-                    .all(|prof| !tt.has_professor_overlap(prof))
+                    .all(|prof| 0 == tt.professor_overlap(prof))
             })
             .collect::<Vec<_>>();
         let valid_scores = valid_tts
