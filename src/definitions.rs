@@ -96,6 +96,15 @@ impl TimeTable {
         self.inner[time][room] = course;
         self.lookup.insert(course, (time, room));
 
+        if let Some(free_slots) = &mut self.free_slots_cache {
+            if let Some(idx) = free_slots
+                .iter()
+                .position(|(t, r)| *t == time && *r == room)
+            {
+                free_slots.swap_remove(idx);
+            }
+        }
+
         Ok(())
     }
 
@@ -103,6 +112,10 @@ impl TimeTable {
         let course = self.inner[time][room];
         self.lookup.remove(&course);
         self.inner[time][room] = 0;
+
+        if let Some(free_slots) = &mut self.free_slots_cache {
+            free_slots.push((time, room));
+        }
 
         assert!(self.find(course).is_none());
     }
@@ -116,16 +129,40 @@ impl TimeTable {
     }
 
     pub fn courses(&self) -> HashSet<usize> {
-        self.lookup.keys().copied().collect()
+        let mut n = 0;
+        for time in self.inner.iter() {
+            for room in time.iter() {
+                if *room != 0 {
+                    n += 1;
+                }
+            }
+        }
+
+        let n2: HashSet<usize> = self.lookup.keys().copied().collect();
+        assert_eq!(n, n2.len());
+        n2
     }
 
     // randomly place a course in the timetable into a free slot
     pub fn random_place(&mut self, course: usize) -> Result<(), (usize, usize)> {
+        let l = self.courses().len();
         let free_slots = self.free_slots_cached();
 
         assert!(!free_slots.is_empty(), "No free slots left");
         let (time, room) = free_slots[rand::thread_rng().gen_range(0..free_slots.len())];
-        self.set(time, room, course)
+        assert_eq!(
+            self.get(time, room),
+            0,
+            "Free slot was not free ({}, {}): {}",
+            time,
+            room,
+            self.get(time, room)
+        );
+        self.set(time, room, course)?;
+
+        assert!(self.courses().len() == l + 1);
+
+        Ok(())
     }
 
     // shift the courses in all rooms to the left (reduce fragmentation)

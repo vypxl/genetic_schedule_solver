@@ -89,6 +89,8 @@ impl TimeTable {
             }
         }
 
+        assert!(tt.courses().len() == self.courses().len());
+
         tt
     }
 
@@ -116,6 +118,8 @@ impl TimeTable {
         for course in missing_courses {
             tt.random_place(*course).unwrap(); // we only place missing courses, so no collision
         }
+
+        assert!(tt.courses().len() == self.courses().len());
 
         tt
     }
