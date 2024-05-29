@@ -201,17 +201,63 @@
 #slide[
   = Genetic Algorithm - Implementation
 
-  I implemented the described algorithm in Rust. It takes the number of courses, rooms and timeslots ($|C| <= |T| * |R|$ !), and definitions for each student and professor.
+  I implemented the described algorithm in Rust #footnote[See appendix for relevant code]. It takes the number of courses, rooms and timeslots ($|C| <= |T| * |R|$ !), and definitions for each student and professor. It can also generate mock data for testing.
+
   For a more detailed description of the input format and how to use the program, consult the `README.md` file.
 
 
 ]
 
 #slide[
-  = Findings TODO
+  = Results
 
-  - turns out v1 of `cross` is bad - maybe take first half / second half and fix?
-  - profs as strong negative score better than hard cutoff
+  For demonstration purposes, I created three test sets: 
+
+  > Note: Each Course is taught by one professor, so the number of professors is determined by `Cs/Prof`
+
+  > Note 2: Due to the random nature of the generated data, results will be much less optimal than in a real life scenario.
+
+  #table(
+    columns: 7,
+    inset: 10pt,
+    align: center,
+    table.header(
+      [*Test Set*], [*Students*], [*Courses*], [*Timeslots*], [*Rooms*], [*Cs/Stud*], [*Cs/Prof*]
+    )
+    ,
+    "Small", "100", "16", "10", "3", "3", "2",
+    "Medium", "256", "50", "20", "5", "8", "5",
+    "Realistic", "5000", "100", "40", "10", "20", "10"
+  )
+]
+
+#slide[
+  = Results - Varying Population Size
+]
+
+#slide[
+  = Results - Varying Selection Split
+]
+
+#slide[
+  = Results = Varying Mutation Chance
+]
+
+#slide[
+  = Lessons Learned
+
+  - The Meta-parameters greatly influence effectiveness
+  - Same goes for problem modeling
+  - Not always obvious why a change leads to better results
+  - Implementation details can be tricky: Bugs, oversights, ..
+
+  -> Genetic Algorithms are a powerful tool, but require a lot of experimentation and tuning
+]
+
+#slide[
+  = Conclusion
+
+  Genetic Algorithms are a good tool to approach optimization problems that benefit from stochastic search. For small to medium sized problems, they can be very fast and effective. For larger problems, a lot of fine tuning is needed to achieve good results. However, by taking inspiration from nature, simple functions for mutation and combining yield impressive results.
 ]
 
 #slide(bibliography("bibliography.yml", title: "Sources"))
