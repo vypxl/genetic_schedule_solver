@@ -39,6 +39,7 @@ fn compute(
     selection_factor: f64,
     mutation_chance: f64,
     fname: Option<String>,
+    csv_output: bool,
 ) {
     let file_contents = match fname {
         Some(f) => std::fs::read_to_string(f).expect("Could not read file"),
@@ -59,22 +60,37 @@ fn compute(
 
     for i_generation in 1..=n_generations {
         let new_generation = con.generation(population, n_pairs, n_children, mutation_chance);
-        let (report, best_score, best) = con.evaluate_generation(&new_generation);
+        let result = con.evaluate_generation(&new_generation);
 
-        println!("Generation {}: {:?}", i_generation, report);
+        if let Some((mean, best_score, best)) = result {
+            if csv_output {
+                println!("{},{}", mean, best_score);
+            } else {
+                println!(
+                    "Generation {}: Mean: {:.2} Best: {:.2}",
+                    mean, best_score, i_generation
+                );
+            }
 
-        if best.is_some() {
             if best_score < overall_best_score {
-                overall_best = best;
+                overall_best = Some(best);
                 overall_best_score = best_score;
             }
 
             if best_score == 0 {
-                println!("Found a timetable with no penalty, stopping early..");
+                if !csv_output {
+                    println!("Found a timetable with no penalty, stopping early..");
+                }
                 break;
             }
+        } else if !csv_output {
+            println!("Generation {}: No valid timetables", i_generation);
         }
         population = new_generation;
+    }
+
+    if csv_output {
+        return;
     }
 
     if let Some(mut best) = overall_best {
@@ -115,12 +131,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             selection_factor,
             mutation_chance,
             filename,
+            csv_output,
         } => compute(
             *population_size,
             *n_generations,
             *selection_factor,
             *mutation_chance,
             filename.clone(),
+            *csv_output,
         ),
     }
 

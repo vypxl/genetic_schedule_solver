@@ -181,10 +181,7 @@ impl Constraints {
             .collect::<Vec<_>>()
     }
 
-    pub fn evaluate_generation(
-        &self,
-        population: &[TimeTable],
-    ) -> (String, usize, Option<TimeTable>) {
+    pub fn evaluate_generation(&self, population: &[TimeTable]) -> Option<(f64, usize, TimeTable)> {
         let valid_tts = population
             .iter()
             .filter(|tt| {
@@ -199,7 +196,7 @@ impl Constraints {
             .collect::<Vec<_>>();
 
         if valid_scores.is_empty() {
-            return ("No valid timetables".to_string(), 0, None);
+            return None;
         }
 
         let mean = (1.0 / valid_scores.len() as f64) * (valid_scores.iter().sum::<usize>() as f64);
@@ -211,10 +208,6 @@ impl Constraints {
             .unwrap();
         let best = valid_tts[best_idx].clone();
 
-        (
-            format!("Mean: {:.2}, Best: {:.2}", mean, best_score),
-            *best_score,
-            Some(best),
-        )
+        Some((mean, *best_score, best))
     }
 }

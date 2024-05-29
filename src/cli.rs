@@ -35,5 +35,7 @@ pub enum Action {
         mutation_chance: f64,
         #[arg(short, long, help("Input file"))]
         filename: Option<String>,
+        #[arg(short, long, help("Output as CSV"))]
+        csv_output: bool,
     },
 }
