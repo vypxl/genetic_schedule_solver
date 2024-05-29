@@ -80,11 +80,18 @@ fn compute(
             if best_score == 0 {
                 if !csv_output {
                     println!("Found a timetable with no penalty, stopping early..");
+                } else {
+                    // Don't break scripts, just output invalid data for the rest
+                    for _ in i_generation..n_generations {
+                        println!("-2,-2");
+                    }
                 }
                 break;
             }
         } else if !csv_output {
             println!("Generation {}: No valid timetables", i_generation);
+        } else {
+            println!("-1, -1");
         }
         population = new_generation;
     }
