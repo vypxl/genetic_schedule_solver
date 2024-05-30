@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import matplotlib.pyplot as plt
 import csv
+import sys
 
 def normalize(means, bests, offset):
     pivot = max(*means)
@@ -59,7 +60,11 @@ def plot_execution_data(file_path='all.csv'):
     plt.show()
 
 def main():
-    plot_execution_data()
+    if len(sys.argv) != 2:
+        print("Provide a file path.")
+        exit(1)
+
+    plot_execution_data(sys.argv[1])
 
 if __name__ == "__main__":
     main()

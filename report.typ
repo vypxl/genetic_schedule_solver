@@ -231,16 +231,59 @@
   )
 ]
 
+//
+// image("results/all-1024-64-0.02-0.0025.png"),
+// image("results/all-1024-64-0.02-0.005.png"),
+// image("results/all-1024-64-0.02-0.02.png"),
+// image("results/all-1024-64-0.02-0.05.png"),
+//
+// image("results/all-1024-64-0.2-0.02.png"),
+//
+// image("results/all-1024-64-0.05-0.02.png"),
+//
+// image("results/all-128-128-0.05-0.02.png"),
+// image("results/all-4096-64-0.05-0.02.png"),
+
 #slide[
   = Results - Varying Population Size
+
+  We see populations sizes 128, 1024, and 4096
+  #table(
+    columns: 3,
+    image("results/all-128-128-0.05-0.02.png"),
+    image("results/all-1024-64-0.05-0.02.png"),
+    image("results/all-4096-64-0.05-0.02.png"),
+  )
 ]
 
 #slide[
   = Results - Varying Selection Split
+
+  We see Selection Splits of 2%, 5%, and 20%
+
+  Note that at 20% split, the algorithm could not generate a valid timetable within 64 Generations for the realistic example.
+
+  #table(
+    columns: 3,
+    image("results/all-1024-64-0.02-0.02.png"),
+    image("results/all-1024-64-0.05-0.02.png"),
+    image("results/all-1024-64-0.2-0.02.png"),
+  )
 ]
 
 #slide[
   = Results = Varying Mutation Chance
+
+  We see Mutation Chances of 0.25%, 0.5%, 2%, 5%
+  This means each newly generated timetable has a X% chance per slot to mutate in that slot.
+
+  #table(
+    columns: 4,
+    image("results/all-1024-64-0.02-0.0025.png"),
+    image("results/all-1024-64-0.02-0.005.png"),
+    image("results/all-1024-64-0.05-0.02.png"),
+    image("results/all-1024-64-0.02-0.05.png"),
+  )
 ]
 
 #slide[
@@ -250,6 +293,8 @@
   - Same goes for problem modeling
   - Not always obvious why a change leads to better results
   - Implementation details can be tricky: Bugs, oversights, ..
+
+  - Pro: Very well parallelizable: almost linear speedup with more cpu cores! (Evaluations of genomes is completely independent, and make up most of the computation)
 
   -> Genetic Algorithms are a powerful tool, but require a lot of experimentation and tuning
 ]

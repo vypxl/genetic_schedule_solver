@@ -33,6 +33,7 @@ run-all population_size generations split mut_chance:
   just run-medium {{population_size}} {{generations}} {{split}} {{mut_chance}} | tee medium.csv
   just run-realistic {{population_size}} {{generations}} {{split}} {{mut_chance}} | tee realistic.csv
   paste -d ',' small.csv medium.csv realistic.csv | tee all.csv
+  cp all.csv results/all-{{population_size}}-{{generations}}-{{split}}-{{mut_chance}}.csv
 
   rm small.csv medium.csv realistic.csv
 
