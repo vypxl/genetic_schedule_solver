@@ -72,7 +72,7 @@
 
   -> Find the 'best' timetable according to some evalutation criteria
 
-  - Generally NP-hard #citef(<aome>) #citef(<abuay>)
+  - Generally NP-hard #citef(<aome>) #citef(<abuay>) #footnote[NP-hard: In simple terms, the problem is not solvable in polynomial time.]
   - Simplified version of the 'University Course Timetabling Problem' #citef(<abuay>)
 ]
 
@@ -121,6 +121,20 @@
   The second criterium was chosen to make the algorithm prefer 'blocks' of classes over fragmented schedules.
 
   A more sophisticated evaluation function could include lunch breaks, prefer morning classes, prefer one full day over many sparsely filled days, etc.
+]
+
+#slide[
+  = Genetic Algorithm - Motivation
+
+  -> Why use a genetic algorithm?
+
+  This problem has no obvious way of 'improving' upon a previous solution, and it is very difficult to determine when local minima are reached.
+  Thus, an algorithm with a lot of randomness is beneficial, as it can explore the solution space more effectively.
+
+  Especially the mixing step of a genetic algorithm is good for this task, as it is a way to combine the good parts of two solutions while leaving out the bad parts.
+
+  Other approaches (such as Taboo Search (not explained here)) are possible, however many papers about this problem also use genetic algorithms.
+
 ]
 
 #slide[
@@ -178,9 +192,9 @@
   = Genetic Algorithm - Selection & Iteration
 
   We select the best timetables from the population using the evaluation function $f$.
-  We sort the population by $f$ and take the best $k$ timetables.
+  We sort the population by $f$ and take the best $x%$ of timetables.
 
-  Then we create a new population by making $k/2$ pairs and crossing them, then mutating the 'children' with probability $rho$.
+  Then we create a new population by making pairs and crossing them, then mutating the 'children' with probability $rho$.#footnote[e.g. If our selection split $x$ is $10%$, each pair will create 20 children to create a new generation of equal size to the previous one.]
 
   We repeat this for the desired number of generations to obtain our final population.
   The result will then be the timetable from this population with the lowest evaluation score.
@@ -204,8 +218,6 @@
   I implemented the described algorithm in Rust #footnote[See appendix for relevant code]. It takes the number of courses, rooms and timeslots ($|C| <= |T| * |R|$ !), and definitions for each student and professor. It can also generate mock data for testing.
 
   For a more detailed description of the input format and how to use the program, consult the `README.md` file.
-
-
 ]
 
 #slide[
@@ -216,6 +228,8 @@
   > Note: Each Course is taught by one professor, so the number of professors is determined by `Cs/Prof`
 
   > Note 2: Due to the random nature of the generated data, results will be much less optimal than in a real life scenario.
+
+  > Note 3: Due to the nature of `eval`, each test set has a minimum penalty, that's why we won't see scores lower that. More important is the convergence behavior.
 
   #table(
     columns: 7,
@@ -231,58 +245,64 @@
   )
 ]
 
-//
-// image("results/all-1024-64-0.02-0.0025.png"),
-// image("results/all-1024-64-0.02-0.005.png"),
-// image("results/all-1024-64-0.02-0.02.png"),
-// image("results/all-1024-64-0.02-0.05.png"),
-//
-// image("results/all-1024-64-0.2-0.02.png"),
-//
-// image("results/all-1024-64-0.05-0.02.png"),
-//
-// image("results/all-128-128-0.05-0.02.png"),
-// image("results/all-4096-64-0.05-0.02.png"),
+#slide[
+  = Charts Explanation
+
+  #grid(columns: (1fr, auto),
+    [
+      I'll be showing charts like the one on the right.
+
+      They show the evaluation function score of the best timetable in each generation for all three examples, on a logarithmic scale.
+
+      If there are parts of the lines missing, this means that in the respective generation, no valid timetable was found yet (all of them are in violation with the professor constraint).
+      
+      Except for the parameter to be varied, the parameters for execution are:\
+      `population size: 1024, selection split: 5%, mutation chance: 2%` #footnote[Selection split: Take the x% best timetables out of each generation to create the next one with.]
+    ],
+    image("results/all-1024-64-0.02-0.05.png", height: 70%)
+  )
+]
 
 #slide[
   = Results - Varying Population Size
 
-  We see populations sizes 128, 1024, and 4096
-  #table(
+  The small example isn't much affected, however the other examples show worse results with larger populations. This could be caused by less strict selection leaking bad traits into new generations.
+
+  #grid(
     columns: 3,
-    image("results/all-128-128-0.05-0.02.png"),
-    image("results/all-1024-64-0.05-0.02.png"),
-    image("results/all-4096-64-0.05-0.02.png"),
+    figure(image("results/all-128-128-0.05-0.02.png"), caption: [$|"Popul."| = 128$]),
+    figure(image("results/all-1024-64-0.05-0.02.png"), caption: [$|"Popul."| = 1024$]),
+    figure(image("results/all-4096-64-0.05-0.02.png"), caption: [$|"Popul."| = 4096$]),
   )
 ]
 
 #slide[
   = Results - Varying Selection Split
 
-  We see Selection Splits of 2%, 5%, and 20%
+  The selection split has a big impact. A small split forces out bad timetables quickly, leading to faster convergence.
+  Higher splits can even completely break the ability to find valid timetables (see the missing purple line in Figure 6).
 
-  Note that at 20% split, the algorithm could not generate a valid timetable within 64 Generations for the realistic example.
-
-  #table(
+  #grid(
     columns: 3,
-    image("results/all-1024-64-0.02-0.02.png"),
-    image("results/all-1024-64-0.05-0.02.png"),
-    image("results/all-1024-64-0.2-0.02.png"),
+    figure(image("results/all-1024-64-0.02-0.02.png"), caption: [$"Split" = 2%$]),
+    figure(image("results/all-1024-64-0.05-0.02.png"), caption: [$"Split" = 5%$]),
+    figure(image("results/all-1024-64-0.2-0.02.png"), caption: [$"Split" = 20%$]),
   )
 ]
 
 #slide[
   = Results = Varying Mutation Chance
 
-  We see Mutation Chances of 0.25%, 0.5%, 2%, 5%
-  This means each newly generated timetable has a X% chance per slot to mutate in that slot.
+  Varying the mutation chance $rho$ (explained in the section about the Genetic Algorithm) also has a big impact.
+  Low mutation rates lead to more smooth convergence, while high mutation rates can lead to faster convergence and even better results,
+  although for the realistic example to high mutations show no convergence.
 
-  #table(
+  #grid(
     columns: 4,
-    image("results/all-1024-64-0.02-0.0025.png"),
-    image("results/all-1024-64-0.02-0.005.png"),
-    image("results/all-1024-64-0.05-0.02.png"),
-    image("results/all-1024-64-0.02-0.05.png"),
+    figure(image("results/all-1024-64-0.02-0.0025.png"), caption: [$rho = 0.25%$]),
+    figure(image("results/all-1024-64-0.02-0.005.png"), caption: [$rho = 0.5%$]),
+    figure(image("results/all-1024-64-0.05-0.02.png"), caption: [$rho = 2%$]),
+    figure(image("results/all-1024-64-0.02-0.05.png"), caption: [$rho = 5%$]),
   )
 ]
 
@@ -300,9 +320,21 @@
 ]
 
 #slide[
+  = Future work, Ideas and Things to Improve
+
+  - The quality measure of larger examples is non-obvious. Thus, the effectiveness of this algorithm is not well measurable at the moment.
+
+  - A lot of per-dataset tweaking required: Some automatic hyperparameter adjustment could improve results.
+
+  - Real world data might bring different results and new insights
+]
+
+#slide[
   = Conclusion
 
   Genetic Algorithms are a good tool to approach optimization problems that benefit from stochastic search. For small to medium sized problems, they can be very fast and effective. For larger problems, a lot of fine tuning is needed to achieve good results. However, by taking inspiration from nature, simple functions for mutation and combining yield impressive results.
+
+  Find the code at https://github.com/vypxl/genetic_schedule_solver
 ]
 
 #slide(bibliography("bibliography.yml", title: "Sources"))

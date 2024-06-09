@@ -1,4 +1,4 @@
-default: make-chart
+default: make-all-charts
 
 generate-scratch:
   # cargo run -- generate <N_STUDENTS> <N_COURSES> <N_TIMESLOTS> <N_ROOMS> <N_COURSES_PER_STUDENT> <N_COURSES_PER_PROF>
@@ -37,5 +37,5 @@ run-all population_size generations split mut_chance:
 
   rm small.csv medium.csv realistic.csv
 
-make-chart:
-  ./make_chart.py
+make-all-charts:
+  find ./results/ -name "*.csv" -type f -exec ./make_chart.py {} \;
